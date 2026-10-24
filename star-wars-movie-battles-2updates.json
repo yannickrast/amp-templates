@@ -1,0 +1,113 @@
+[
+  {
+    "UpdateStageName": "Install .NET Runtime 8.0 (Linux)",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "/bin/bash",
+    "UpdateSourceArgs": "-c \"cd {{$FullBaseDir}} && curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --install-dir .dotnet --no-path && if [ ! -f .dotnet/dotnet ]; then echo 'ERROR: dotnet binary missing'; exit 1; fi\"",
+    "SkipOnFailure": false
+  },
+  {
+    "UpdateStageName": "SteamCMD Game Files Download",
+    "UpdateSourcePlatform": "All",
+    "UpdateSource": "SteamCMD",
+    "UpdateSourceData": "6020",
+    "UpdateSourceTarget": "{{$FullRootDir}}client",
+    "ForceDownloadPlatform": "Windows"
+  },
+  {
+    "UpdateStageName": "Create Base Directory",
+    "UpdateSourcePlatform": "All",
+    "UpdateSource": "CreateDirectory",
+    "UpdateSourceArgs": "{{$FullBaseDir}}base"
+  },
+  {
+    "UpdateStageName": "Client File Copy (Windows)",
+    "UpdateSourcePlatform": "Windows",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "cmd.exe",
+    "UpdateSourceArgs": "/C xcopy /E /Y /I jka\\client\\GameData\\base\\assets*.pk3 jka\\server\\base\\ && rmdir /Q /S jka\\client\\",
+    "SkipOnFailure": false
+  },
+  {
+    "UpdateStageName": "Client File Copy (Linux)",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "/bin/bash",
+    "UpdateSourceArgs": "-c \"mkdir -p jka/server/base/ && cp -f jka/client/GameData/base/assets*.pk3 jka/server/base/ && rm -rf jka/client/\"",
+    "SkipOnFailure": false
+  },
+  {
+    "UpdateStageName": "OpenJK Download (Windows)",
+    "UpdateSourcePlatform": "Windows",
+    "UpdateSource": "GithubRelease",
+    "UpdateSourceArgs": "JACoders/OpenJK",
+    "UpdateSourceData": "OpenJK-windows-x86_64.zip",
+    "UpdateSourceTarget": "{{$FullBaseDir}}",
+    "UnzipUpdateSource": true,
+    "OverwriteExistingFiles": true,
+    "DeleteAfterExtract": true
+  },
+  {
+    "UpdateStageName": "Downloading MB2 CLI Updater",
+    "UpdateSourcePlatform": "All",
+    "UpdateSource": "FetchURL",
+    "UpdateSourceData": "https://www.moviebattles.org/download/MBII_CLI_Updater.zip",
+    "UnzipUpdateSource": true,
+    "OverwriteExistingFiles": true,
+    "DeleteAfterExtract": true,
+    "OneShot": true
+  },
+  {
+    "UpdateStageName": "Downloading MB2 Server Files (Windows)",
+    "UpdateSourcePlatform": "Windows",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "powershell.exe",
+    "UpdateSourceArgs": "-NoProfile -ExecutionPolicy Bypass -Command \"& { $process = Start-Process '{{$FullBaseDir}}MBII_CommandLine_Update_XPlatform.exe' -ArgumentList '-s' -NoNewWindow -PassThru; $process.WaitForExit(); Write-Output $process.StandardOutput.ReadToEnd(); Write-Error $process.StandardError.ReadToEnd() }\"",
+    "UnzipUpdateSource": false,
+    "OverwriteExistingFiles": false,
+    "DeleteAfterExtract": false
+  },
+  {
+    "UpdateStageName": "Add .NET RollForward (Linux)",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "/bin/bash",
+    "UpdateSourceArgs": "-c \"sed -i '/\\\"tfm\\\": \\\"net6.0\\\"/a \\\"rollForward\\\": \\\"LatestMajor\\\",' {{$FullBaseDir}}MBII_CommandLine_Update_XPlatform.runtimeconfig.json\"",
+    "SkipOnFailure": true
+  },
+  {
+    "UpdateStageName": "Execute MBII Updater (Linux)",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "/bin/bash",
+    "UpdateSourceArgs": "-c \"cd {{$FullBaseDir}} && ./.dotnet/dotnet MBII_CommandLine_Update_XPlatform.dll -s\"",
+    "SkipOnFailure": false
+  },
+  {
+    "UpdateStageName": "Replace jampgame Library (Linux)",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "/bin/bash",
+    "UpdateSourceArgs": "-c \"cp -f {{$FullBaseDir}}MBII/jampgamei386.nopp.so {{$FullBaseDir}}MBII/jampgamei386.so 2>/dev/null; exit 0\"",
+    "SkipOnFailure": true
+  },
+  {
+    "UpdateStageName": "Make Binary Executable (Linux)",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "/bin/bash",
+    "UpdateSourceArgs": "-c \"chmod +x {{$FullBaseDir}}mbii.i386 2>/dev/null; chmod +x {{$FullBaseDir}}mbiided.i386 2>/dev/null; exit 0\"",
+    "SkipOnFailure": true
+  },
+  {
+    "UpdateStageName": "Download server.cfg",
+    "UpdateSourcePlatform": "All",
+    "UpdateSource": "FetchURL",
+    "UpdateSourceData": "https://raw.githubusercontent.com/yannickrast/amp-templates/refs/heads/star-wars-movie-battles-2/star-wars-movie-battles-2server.cfg",
+    "UpdateSourceArgs": "server.cfg",
+    "UpdateSourceTarget": "{{$FullBaseDir}}MBII",
+    "OverwriteExistingFiles": false,
+    "SkipOnFailure": true
+  }
+]
